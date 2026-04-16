@@ -1,7 +1,5 @@
-// Opcional 3: tempos fixos por prioridade
-//   Produtor: P1 cada 1 s, P2 cada 2 s, P3 cada 3 s.
-//   Consumidor: prio1 tarda 3 s, prio2 2 s, prio3 1 s.
-// Compilación: gcc -Wall -pthread prod_cons_tiempos.c buffer.c -o prod_cons
+// Opcional 1: 3 produtores + 1 consumidor con prioridades e trylock
+// Compilación: gcc -Wall -pthread prod_cons_prioridades.c buffer.c -o prod_cons
 
 #include "buffer.h"
 
@@ -17,25 +15,25 @@ void *producer(void *arg) {
         exit(1);
     }
     int suma = 0;
-    struct item it;
+    int item;
 
     for(int i = 0; i < MAX_ITER; i++){
-        sleep(args->prioridade); // tempo fixo: P1=1s, P2=2s, P3=3s
-        if(produce_item(arq, &suma, &it) < 1) break;
+        sleep(1 + rand()%6); // agarda aleatoria 1-6 s
+        item = produce_item(arq, &suma);
+        if(item < 1 || item > 99) break;
 
         pthread_mutex_lock(&args->mutex);
         while(args->cantidad >= N) pthread_cond_wait(&args->condp, &args->mutex);
-        insert_item(it, args);
-        printf("[%ld] P%d insire %d (caduc %ds)\n",
-               tempo_ms(), args->prioridade, it.valor, it.caducidade);
+        insert_item(item, args);
+        printf("[%ld] P%d insire %d\n", tempo_ms(), args->prioridade, item);
         pthread_cond_signal(&args->condc);
         pthread_mutex_unlock(&args->mutex);
     }
 
-    struct item fin = {0, tempo_ms(), 99};
+    // centinela: inserimos un 0 para marcar fin
     pthread_mutex_lock(&args->mutex);
     while(args->cantidad >= N) pthread_cond_wait(&args->condp, &args->mutex);
-    insert_item(fin, args);
+    insert_item(0, args);
     pthread_cond_signal(&args->condc);
     pthread_mutex_unlock(&args->mutex);
 
@@ -46,31 +44,26 @@ void *producer(void *arg) {
 
 void *consumer(void *arg) {
     int sumas[NP] = {0};
-    int caducados[NP] = {0};
     int fin[NP] = {0};
-    struct item it;
+    int item;
 
     while(!(fin[0] && fin[1] && fin[2])){
         int feito = 0;
+        // probar buffers por orde de prioridade con trylock
         for(int p = 0; p < NP && !feito; p++){
             if(fin[p]) continue;
             if(pthread_mutex_trylock(&buffers[p].mutex) != 0) continue;
             if(buffers[p].cantidad > 0){
-                it = remove_item(&buffers[p]);
+                item = remove_item(&buffers[p]);
                 pthread_cond_signal(&buffers[p].condp);
                 pthread_mutex_unlock(&buffers[p].mutex);
-                if(it.valor == 0){
+                if(item == 0){
                     fin[p] = 1;
                     printf("[%ld] Cons fin de P%d\n", tempo_ms(), p+1);
-                } else if(tempo_ms() - it.t_creacion > (long)it.caducidade * 1000L){
-                    printf("[%ld] Cons DESCARTADO %d de P%d (caduc %ds)\n",
-                           tempo_ms(), it.valor, p+1, it.caducidade);
-                    caducados[p]++;
                 } else {
-                    printf("[%ld] Cons consume %d de P%d (%ds)\n",
-                           tempo_ms(), it.valor, p+1, 3-p);
-                    sumas[p] += it.valor;
-                    sleep(3-p); // tempo fixo: P1=3s, P2=2s, P3=1s
+                    printf("[%ld] Cons consume %d de P%d\n", tempo_ms(), item, p+1);
+                    sumas[p] += item;
+                    sleep(1 + rand()%3); // procesado 1-3 s
                 }
                 feito = 1;
             } else {
@@ -80,15 +73,17 @@ void *consumer(void *arg) {
         if(!feito) usleep(10000);
     }
 
-    printf("Consumidor resultado final:\n");
+    printf("Consumidor sumas finais:\n");
     for(int p = 0; p < NP; p++){
-        printf("P%d: suma=%d, caducados=%d\n", p+1, sumas[p], caducados[p]);
+        printf("P%d: %d\n", p+1, sumas[p]);
     }
     return NULL;
 }
 
 int main(){
+    // inicializacion del randomizador de espera
     srand(time(NULL));
+
     pthread_t prods[NP], cons_thread;
 
     for(int p = 0; p < NP; p++){
