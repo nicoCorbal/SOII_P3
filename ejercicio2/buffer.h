@@ -25,7 +25,7 @@ struct datos {
     int cantidad;
 };
 
-int produce_item(FILE* arq, int *vocal);
+int produce_item(FILE* arq);
 void insert_item(int item, struct datos *temp);
 int remove_item(struct datos *temp);
 

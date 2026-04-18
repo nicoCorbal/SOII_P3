@@ -1,10 +1,8 @@
+//Compilación: gcc -Wall con_mutex.c buffer.c -o -lpthread
 #include "buffer.h"
 pthread_mutex_t mutex;
 pthread_cond_t condc, condp;
 
-struct argumentos{
-    struct datos *buffer;
-};
 
 void *producer(void *arg) {
     //Inicializacion de variables
@@ -14,7 +12,7 @@ void *producer(void *arg) {
         perror("Erro ao abrir lectura.txt");
         exit(1);
     }
-    int enteros[99]={0};
+    int suma=0;
     int item;
 
     int i=0;
@@ -24,20 +22,19 @@ void *producer(void *arg) {
         } else if (i >= P2){
             sleep(rand()%4);    
         }
-        item = produce_item(arq, enteros);
+        item = produce_item(arq);
         if(!item) break;
         pthread_mutex_lock(&mutex);
         while(args->cantidad>=N) pthread_cond_wait(&condp,&mutex);
+        struct timespec ts = {0, 1000000000}; // 100 ms
+        nanosleep(&ts, NULL);
         insert_item(item, args);
         pthread_cond_signal(&condc);
         pthread_mutex_unlock(&mutex);
 
         if(item <1 || item >99) break;
  
-        enteros[item-1]++;
-        /*for(int i = 0; i < 5; i++){
-            printf("Vocal %c: %d\n", "AEIOU"[i], enteros[i]);
-        }*/
+        suma+=item;
     }
     if(i<MAX_ITER-1){
         pthread_mutex_lock(&mutex);
@@ -49,10 +46,7 @@ void *producer(void *arg) {
 
 
 
-    printf("Productor vocales finales: \n");
-    for(int i = 0; i < 10; i++){
-        printf("Entero %d: %d\n", (i+1), enteros[i]);
-    }
+    printf("Suma productor: %d\n",suma);
 
     fclose(arq);
     return NULL;
@@ -62,7 +56,7 @@ void *consumer(void *arg) {
 
     struct datos *args = (struct datos*) arg;
     int item;
-    int enteros[99] = {0};
+    int suma=0;
     //sched_yield();
 
     for(int i = 0; i<MAX_ITER; i++){
@@ -74,20 +68,19 @@ void *consumer(void *arg) {
         //Se comprueban los semáforos para entrar en la región crítica
         pthread_mutex_lock(&mutex);
         while(args->cantidad==0) pthread_cond_wait(&condc,&mutex);
+        struct timespec ts = {0, 1000000000}; // 100 ms
+        nanosleep(&ts, NULL);
         item = remove_item(args);
         pthread_cond_signal(&condp);
         pthread_mutex_unlock(&mutex);
 
         if(item <1 || item >99) break;
-        enteros[item-1]++;
+        suma+=item;
         /*for(int i = 0; i < 5; i++){
             printf("Vocal %c: %d\n", "AEIOU"[i], enteros[i]);
         }*/
     }
-    printf("Consumidor vocales finales: \n");
-    for(int i = 0; i < 10; i++){
-        printf("Entero %d: %d\n", (i+1), enteros[i]);
-    }
+     printf("Suma productor: %d\n",suma);
     return NULL;
 }
 
