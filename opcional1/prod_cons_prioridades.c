@@ -46,6 +46,7 @@ void *consumer(void *arg) {
     int sumas[NP] = {0};
     int fin[NP] = {0};
     int item;
+    struct timespec ts = {0, 10000000}; 
 
     while(!(fin[0] && fin[1] && fin[2])){
         int feito = 0;
@@ -70,7 +71,7 @@ void *consumer(void *arg) {
                 pthread_mutex_unlock(&buffers[p].mutex);
             }
         }
-        if(!feito) usleep(10000);
+        if(!feito) nanosleep(&ts,NULL);
     }
 
     printf("Consumidor sumas finais:\n");
