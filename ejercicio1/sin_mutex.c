@@ -1,3 +1,5 @@
+//Codigo realiza por Nicolas Corbal Capas y Hugo Veiga Couselo
+//Compilación: gcc -Wall con_mutex.c buffer.c -o sin_mutex -lpthread
 #include "buffer.h"
 
 struct argumentos{

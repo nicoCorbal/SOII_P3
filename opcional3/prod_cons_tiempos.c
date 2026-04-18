@@ -1,3 +1,4 @@
+//Codigo realiza por Nicolas Corbal Capas y Hugo Veiga Couselo
 // Opcional 3: tempos fixos por prioridade
 //   Produtor: P1 cada 1 s, P2 cada 2 s, P3 cada 3 s.
 //   Consumidor: prio1 tarda 3 s, prio2 2 s, prio3 1 s.

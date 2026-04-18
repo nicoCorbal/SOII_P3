@@ -1,4 +1,5 @@
-//Compilación: gcc -Wall con_mutex.c buffer.c -o -lpthread
+//Codigo realiza por Nicolas Corbal Capas y Hugo Veiga Couselo
+//Compilación: gcc -Wall con_mutex.c buffer.c -o con_mutex -lpthread
 #include "buffer.h"
 pthread_mutex_t mutex;
 pthread_cond_t condc, condp;

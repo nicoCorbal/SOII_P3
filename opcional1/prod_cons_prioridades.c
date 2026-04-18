@@ -1,3 +1,4 @@
+//Codigo realiza por Nicolas Corbal Capas y Hugo Veiga Couselo
 // Opcional 1: 3 produtores + 1 consumidor con prioridades e trylock
 // Compilación: gcc -Wall -pthread prod_cons_prioridades.c buffer.c -o prod_cons
 

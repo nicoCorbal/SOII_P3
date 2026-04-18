@@ -1,3 +1,4 @@
+//Codigo realiza por Nicolas Corbal Capas y Hugo Veiga Couselo
 // Opcional 2: engade caducidade. Se o item xa caducou, o consumidor descártao
 // (non se suma nin se simula o procesado).
 // Compilación: gcc -Wall -pthread prod_cons_caducidad.c buffer.c -o prod_cons
