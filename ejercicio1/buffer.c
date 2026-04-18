@@ -3,7 +3,7 @@
 
 int produce_item(FILE* arq){
     //Tomamos o caracter correspondente ao punteiro do arquivo e comprobamos que non haxa acabado
-    int c;
+    int c=-1;
     if(feof(arq)) return -1;
     fscanf(arq,"%d",&c);
 

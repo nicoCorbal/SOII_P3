@@ -22,6 +22,7 @@ void *producer(void *arg) {
     for(int i = 0; i<MAX_ITER; i++){
 
         item = produce_item(arq);
+        printf("item: %d\n",item);
         if(!item) break;
         //Se comprueban los semáforos para entrar en la región crítica
         while(args->cantidad>=N);
@@ -62,6 +63,14 @@ void *consumer(void *arg) {
     }
     printf("Suma del consumidor: %d\n",suma);
     return NULL;
+}
+
+int produce_item(FILE* arq){
+    int c;
+    if (fscanf(arq, "%d", &c) != 1) {
+        return -1;  // EOF o error de formato
+    }
+    return c;
 }
 
 
