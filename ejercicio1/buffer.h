@@ -13,8 +13,7 @@
 #define P1 30
 #define P2 60
 #define MAX_ITER 80
-pthread_mutex_t mutex;
-pthread_cond_t condc, condp;
+
 
 struct datos {
     int buffer[N];
@@ -25,7 +24,7 @@ struct datos {
     int cantidad;
 };
 
-int produce_item(FILE* arq, int *vocal);
+int produce_item(FILE* arq);
 void insert_item(int item, struct datos *temp);
 int remove_item(struct datos *temp);
 

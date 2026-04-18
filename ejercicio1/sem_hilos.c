@@ -3,6 +3,7 @@
 struct argumentos{
     struct datos *buffer;
 };
+int final=0;
 
 void *producer(void *arg) {
     //Inicializacion de variables
@@ -12,30 +13,29 @@ void *producer(void *arg) {
         perror("Erro ao abrir lectura.txt");
         exit(1);
     }
-    int enteros[99]={0};
+    int suma=0;
     int item;
 
 
     for(int i = 0; i<MAX_ITER; i++){
 
-        item = produce_item(arq, enteros);
+        item = produce_item(arq);
         if(!item) break;
         //Se comprueban los semáforos para entrar en la región crítica
         while(args->cantidad>=N);
         insert_item(item, args);
         if(item <1 || item >99) break;
         //Se sale de la región crítica y se actualizan los semáforos
-        enteros[item-1]++;
+        suma+=item;
         /*for(int i = 0; i < 5; i++){
             printf("Vocal %c: %d\n", "AEIOU"[i], enteros[i]);
         }*/
     }
+    final=1;
 
 
-    printf("Productor vocales finales: \n");
-    for(int i = 0; i < 5; i++){
-        printf("Entero %d: %d\n", (i+1), enteros[i]);
-    }
+    printf("Suma del productor es: %d\n",suma);
+    
 
     fclose(arq);
     return NULL;
@@ -45,22 +45,20 @@ void *consumer(void *arg) {
 
     struct datos *args = (struct datos*) arg;
     int item;
-    int enteros[99] = {0};
+    int suma=0;
     //sched_yield();
 
     for(int i = 0; i<MAX_ITER; i++){
         //Se comprueban los semáforos para entrar en la región crítica
 
-        if(args->cantidad<=0) sleep(1);
+        while(args->cantidad<=0 && !final) sleep(1);
+        if(final) break;
         // Se accede al buffer compartido
         item = remove_item(args);
         if(item <1 || item >99) break;
-        enteros[item-1]++;
+        suma+=item;
     }
-    printf("Consumidor vocales finales: \n");
-    for(int i = 0; i < 5; i++){
-        printf("Entero %d: %d\n", (i+1), enteros[i]);
-    }
+    printf("Suma del consumidor: %d\n",suma);
     return NULL;
 }
 
