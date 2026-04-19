@@ -38,7 +38,7 @@ void *producer(void *arg) {
     pthread_cond_signal(&args->condc);
     pthread_mutex_unlock(&args->mutex);
 
-    printf("[%ld] P%d FIN suma = %d\n", tempo_ms(), args->prioridade, suma);
+    printf("\033[96m[%ld] P%d FIN suma = %d\033[0m\n", tempo_ms(), args->prioridade, suma);
     fclose(arq);
     return NULL;
 }
@@ -47,7 +47,7 @@ void *consumer(void *arg) {
     int sumas[NP] = {0};
     int fin[NP] = {0};
     int item;
-    struct timespec ts = {0, 10000000}; 
+
 
     while(!(fin[0] && fin[1] && fin[2])){
         int feito = 0;
@@ -72,13 +72,14 @@ void *consumer(void *arg) {
                 pthread_mutex_unlock(&buffers[p].mutex);
             }
         }
-        if(!feito) nanosleep(&ts,NULL);
+        if(!feito) sched_yield();
     }
 
-    printf("Consumidor sumas finais:\n");
+    printf("\033[95mConsumidor sumas finais:\n");
     for(int p = 0; p < NP; p++){
         printf("P%d: %d\n", p+1, sumas[p]);
     }
+    printf("\033[0m");
     return NULL;
 }
 
