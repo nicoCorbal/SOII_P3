@@ -18,25 +18,41 @@ void *producer(void *arg) {
 
     int i=0;
     for(i = 0; i<MAX_ITER; i++){
-        if (i >= P1 && i < P2){
+
+        //Simulador de velocidades
+        if(i<=P1){
+            sleep(1);
+        }else if (i > P1 && i < P2){
             
         } else if (i >= P2){
             sleep(rand()%4);    
         }
+
+        //producción
         item = produce_item(arq);
         if(!item) break;
+
+        //Solicitud entrada en la región crítica
         pthread_mutex_lock(&mutex);
+        //Comprobación de hueco
         while(args->cantidad>=N) pthread_cond_wait(&condp,&mutex);
+
+        //insercion
         struct timespec ts = {0, 1000000000}; // 100 ms
         nanosleep(&ts, NULL);
         insert_item(item, args);
+
+        //Aviso de que hay item
         pthread_cond_signal(&condc);
+        //Desbloqeuo del mutex, saliendo de región crítica
         pthread_mutex_unlock(&mutex);
 
         if(item <1 || item >99) break;
  
         suma+=item;
     }
+
+    //Si el archivo tiene menos de 80 elementos, se introduce conidición de parada de consumidor
     if(i<MAX_ITER-1){
         pthread_mutex_lock(&mutex);
         while(args->cantidad!=0) pthread_cond_wait(&condp,&mutex);
@@ -61,18 +77,31 @@ void *consumer(void *arg) {
     //sched_yield();
 
     for(int i = 0; i<MAX_ITER; i++){
-        if(i>P2){
-            sleep(rand()%4);
-        }else if(i<P1){
+        
+        //Simulador de velocidades
+        if(i<=P1){
             
+        }else if (i > P1 && i < P2){
+            sleep(1);
+        } else if (i >= P2){
+            sleep(rand()%4);    
         }
-        //Se comprueban los semáforos para entrar en la región crítica
+
+        //Solicitud entrada en la región crítica
         pthread_mutex_lock(&mutex);
         while(args->cantidad==0) pthread_cond_wait(&condc,&mutex);
+
+        //Comprobación de hueco
         struct timespec ts = {0, 1000000000}; // 100 ms
         nanosleep(&ts, NULL);
+
+        //Consumicion
         item = remove_item(args);
+
+        //Aviso de que hay hueco
         pthread_cond_signal(&condp);
+
+        //Debloqueo de mutex
         pthread_mutex_unlock(&mutex);
 
         if(item <1 || item >99) break;
@@ -98,7 +127,7 @@ int main(){
     buffer.limInf=0;
     buffer.cantidad=0;
 
-
+    //Se inicializan mutex y variables de condición
     pthread_mutex_init(&mutex,0);
     pthread_cond_init(&condc,0);
     pthread_cond_init(&condp,0);
@@ -109,6 +138,7 @@ int main(){
     pthread_join(prod_thread, NULL);
     pthread_join(cons_thread, NULL);
 
+    //Se liberan mutex y variables de condición
     pthread_cond_destroy(&condc);
     pthread_cond_destroy(&condp);
     pthread_mutex_destroy(&mutex);

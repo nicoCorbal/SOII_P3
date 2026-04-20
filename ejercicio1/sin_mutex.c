@@ -22,18 +22,21 @@ void *producer(void *arg) {
     for(int i = 0; i<MAX_ITER; i++){
 
         item = produce_item(arq);
-        printf("item: %d\n",item);
+        //printf("item: %d\n",item);
         if(!item) break;
-        //Se comprueban los semáforos para entrar en la región crítica
+        //Se comprueba si existe espacio para insertar
         while(args->cantidad>=N);
         insert_item(item, args);
+
+        //Si se lee un item invalido se sale
         if(item <1 || item >99) break;
-        //Se sale de la región crítica y se actualizan los semáforos
+        
         suma+=item;
         /*for(int i = 0; i < 5; i++){
             printf("Vocal %c: %d\n", "AEIOU"[i], enteros[i]);
         }*/
     }
+    //Se marca la salida
     final=1;
 
 
@@ -52,25 +55,17 @@ void *consumer(void *arg) {
     //sched_yield();
 
     for(int i = 0; i<MAX_ITER; i++){
-        //Se comprueban los semáforos para entrar en la región crítica
-
+        
+        //Se comprueba si hay item para consumir y es el final
         while(args->cantidad<=0 && !final) sleep(1);
         if(final) break;
-        // Se accede al buffer compartido
+        // Se consume
         item = remove_item(args);
         if(item <1 || item >99) break;
         suma+=item;
     }
     printf("Suma del consumidor: %d\n",suma);
     return NULL;
-}
-
-int produce_item(FILE* arq){
-    int c;
-    if (fscanf(arq, "%d", &c) != 1) {
-        return -1;  // EOF o error de formato
-    }
-    return c;
 }
 
 

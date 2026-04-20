@@ -18,6 +18,7 @@ int produce_item(FILE* arq, int *suma){
 
 void insert_item(int item, struct datos *temp){
     if(temp->cantidad<N){
+        //se actualizan indicadores
         temp->buffer[temp->limSup] = item;
         temp->limSup = (temp->limSup +1) % N;
         temp->cantidad++;
@@ -27,6 +28,7 @@ void insert_item(int item, struct datos *temp){
 int remove_item(struct datos *temp){
     int item;
     if(temp->cantidad>0){
+        //se actualizan indicadores
         item = temp->buffer[temp->limInf];
         temp->buffer[temp->limInf] = 0;
         temp->cantidad--;

@@ -2,11 +2,10 @@
 
 
 int produce_item(FILE* arq){
-    //Tomamos o caracter correspondente ao punteiro do arquivo e comprobamos que non haxa acabado
-    int c=-1;
-    if(feof(arq)) return -1;
-    fscanf(arq,"%d",&c);
-
+    int c;
+    if (fscanf(arq, "%d", &c) != 1) {
+        return -1;  // EOF o error de formato
+    }
     return c;
 }
 
@@ -16,6 +15,7 @@ void insert_item(int item, struct datos *temp){
     if(temp->limSup<0 || temp->limSup>=N) return;
     if(temp->limInf<0 || temp->limInf>=N) return;
     if(temp->cantidad<N){
+        //se actualizan indicadores
         struct timespec ts = {0, 10000000000}; // 100 ms
         nanosleep(&ts, NULL);
         temp->buffer[temp->limSup] = item;
@@ -32,6 +32,7 @@ int remove_item(struct datos *temp){
     if(temp->limSup<0 || temp->limSup>=N) return -1;
     if(temp->limInf<0 || temp->limInf>=N) return -1;
     if(temp->cantidad>0){
+        //se actualizan indicadores
         struct timespec ts = {0, 10000000000}; // 100 ms
         nanosleep(&ts, NULL);
         item = temp->buffer[temp->limInf];

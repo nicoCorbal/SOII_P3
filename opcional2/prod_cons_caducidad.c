@@ -20,15 +20,21 @@ void *producer(void *arg) {
     struct item it;
 
     for(int i = 0; i < MAX_ITER; i++){
+
+
         sleep(1 + rand()%6);
         if(produce_item(arq, &suma, &it) < 1) break;
 
         pthread_mutex_lock(&args->mutex);
         while(args->cantidad >= N) pthread_cond_wait(&args->condp, &args->mutex);
+
+
         insert_item(it, args);
         printf("[%ld] P%d insire %d (caduc %ds)\n",
                tempo_ms(), args->prioridade, it.valor, it.caducidade);
+
         pthread_cond_signal(&args->condc);
+
         pthread_mutex_unlock(&args->mutex);
     }
 
@@ -40,7 +46,7 @@ void *producer(void *arg) {
     pthread_cond_signal(&args->condc);
     pthread_mutex_unlock(&args->mutex);
 
-    printf("[%ld] P%d FIN suma = %d\n", tempo_ms(), args->prioridade, suma);
+    printf("\033[96m[%ld] P%d FIN suma = %d\033[0m\n", tempo_ms(), args->prioridade, suma);
     fclose(arq);
     return NULL;
 }
@@ -51,6 +57,7 @@ void *consumer(void *arg) {
     int fin[NP] = {0};
     struct item it;
 
+    //Analogo a codigo opcional 1
     while(!(fin[0] && fin[1] && fin[2])){
         int feito = 0;
         for(int p = 0; p < NP && !feito; p++){
@@ -60,30 +67,38 @@ void *consumer(void *arg) {
                 it = remove_item(&buffers[p]);
                 pthread_cond_signal(&buffers[p].condp);
                 pthread_mutex_unlock(&buffers[p].mutex);
+
+
                 if(it.valor == 0){
                     fin[p] = 1;
                     printf("[%ld] Cons fin de P%d\n", tempo_ms(), p+1);
+
+                    //Si está caducado se indica como tal y se descarta
                 } else if(tempo_ms() - it.t_creacion > (long)it.caducidade * 1000L){
-                    printf("[%ld] Cons DESCARTADO %d de P%d (caduc %ds)\n",
+                    printf("\033[91m[%ld] Cons DESCARTADO %d de P%d (caduc %ds)\033[0m\n",
                            tempo_ms(), it.valor, p+1, it.caducidade);
                     caducados[p]++;
+                    
                 } else {
                     printf("[%ld] Cons consume %d de P%d\n", tempo_ms(), it.valor, p+1);
                     sumas[p] += it.valor;
                     sleep(1 + rand()%3);
                 }
+
+
                 feito = 1;
             } else {
                 pthread_mutex_unlock(&buffers[p].mutex);
             }
         }
-        if(!feito) usleep(10000);
+        if(!feito) sched_yield();
     }
 
-    printf("Consumidor resultado final:\n");
+    printf("\033[95mConsumidor resultado final:\n");
     for(int p = 0; p < NP; p++){
         printf("P%d: suma=%d, caducados=%d\n", p+1, sumas[p], caducados[p]);
     }
+    printf("\033[0m\n");
     return NULL;
 }
 

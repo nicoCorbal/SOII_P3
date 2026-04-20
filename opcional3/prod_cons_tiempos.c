@@ -68,10 +68,15 @@ void *consumer(void *arg) {
                            tempo_ms(), it.valor, p+1, it.caducidade);
                     caducados[p]++;
                 } else {
+
+
                     printf("[%ld] Cons consume %d de P%d (%ds)\n",
                            tempo_ms(), it.valor, p+1, 3-p);
                     sumas[p] += it.valor;
                     sleep(3-p); // tempo fixo: P1=3s, P2=2s, P3=1s
+
+
+                    
                 }
                 feito = 1;
             } else {
